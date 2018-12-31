@@ -31,7 +31,7 @@ IVERILOG_DIR=verilog-$(version)
 IVERILOG_TGZ=$(IVERILOG_DIR).tar.gz
 IVERILOG_URL=ftp://icarus.com/pub/eda/verilog/v10/$(IVERILOG_TGZ)
 
-all :
+all : edapack-iverilog
 
 edapack-iverilog : $(BUILD_DIR)/iverilog-$(platform)-$(version).tar.gz
 
@@ -44,7 +44,10 @@ $(BUILD_DIR)/edapack-iverilog.d : $(PACKAGES_DIR)/$(IVERILOG_TGZ)
 	$(Q)mkdir -p $(BUILD_DIR)/iverilog
 	$(Q)cd $(BUILD_DIR)/iverilog ; $(UNTARGZ) $^
 	$(Q)cd $(BUILD_DIR)/iverilog/$(IVERILOG_DIR) ; \
-		./configure --prefix=$(BUILD_DIR)/iverilog/iverilog
+		patch -p1 < $(EDAPACK_IVERILOG_DIR)/scripts/iverilog.patch
+	$(Q)cd $(BUILD_DIR)/iverilog/$(IVERILOG_DIR) ; \
+		./configure --prefix=$(BUILD_DIR)/iverilog/iverilog \
+			CXXFLAGS="-O3" CFLAGS="-O3"
 	$(Q)mkdir -p $(BUILD_DIR)/iverilog/iverilog/lib/ivl
 	$(Q)mkdir -p $(BUILD_DIR)/iverilog/iverilog/lib/ivl/include
 	$(Q)cd $(BUILD_DIR)/iverilog/$(IVERILOG_DIR) ; $(MAKE)
@@ -55,5 +58,14 @@ $(PACKAGES_DIR)/$(IVERILOG_TGZ) :
 	$(Q)if test ! -d $(PACKAGES_DIR); then mkdir -p $(PACKAGES_DIR); fi
 	$(Q)$(WGET) -O $@ $(IVERILOG_URL)
 
+release : edapack-iverilog
+	$(Q)$(EDAPACK_IVERILOG_DIR)/scripts/upload.py \
+		--org EDAPack --repo edapack-iverilog \
+		--key $(GITHUB_API_TOKEN) --version $(version) \
+		$(BUILD_DIR)/iverilog-$(platform)-$(version).tar.gz
 
+clean : 
+	$(Q)rm -rf $(BUILD_DIR)
 
+clean-all : 
+	$(Q)rm -rf $(BUILD_DIR) $(PACKAGES_DIR)

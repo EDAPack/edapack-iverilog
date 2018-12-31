@@ -1,0 +1,96 @@
+diff -rcNB verilog-10.2/driver/main.c verilog-10.2.float/driver/main.c
+*** verilog-10.2/driver/main.c	2017-08-24 08:22:49.000000000 -0700
+--- verilog-10.2.float/driver/main.c	2018-12-31 11:39:37.300315386 -0800
+***************
+*** 20,25 ****
+--- 20,28 ----
+  # include "config.h"
+  # include "version_base.h"
+  # include "version_tag.h"
++ # include <sys/types.h>
++ # include <sys/stat.h>
++ # include <unistd.h>
+  
+  const char NOTICE[] =
+  "  This program is free software; you can redistribute it and/or modify\n"
+***************
+*** 861,870 ****
+        base = ivl_root;
+  
+  #else
+!         /* In a UNIX environment, the IVL_ROOT from the Makefile is
+! 	   dependable. It points to the $prefix/lib/ivl directory,
+! 	   where the sub-parts are installed. */
+!       strcpy(ivl_root, IVL_ROOT);
+        base = ivl_root;
+  #endif
+  
+--- 864,931 ----
+        base = ivl_root;
+  
+  #else
+!       char exe_path[MAXSIZE];
+!       const char *arg0 = argv[0];
+!       int num_elems, i;
+! 
+!       if (arg0[0] == '.') {
+!         // Get the full CWD and append the relative path
+!         getcwd(exe_path, sizeof(exe_path));
+!         if (arg0[1] == '.') {
+!           strcat(exe_path, "/");
+!           strcat(exe_path, arg0);
+!         } else {
+!           strcat(exe_path, &arg0[1]);
+!         }
+!       } else {
+!         // See if this full path exists
+!         struct stat sbuf;
+! 
+!         stat(arg0, &sbuf);
+!         if (S_ISREG(sbuf.st_mode)) {
+!           // arg0 is already an absolute path
+!           strcpy(exe_path, arg0);
+!         } else {
+!           // Look through the path
+!           const char *path = getenv("PATH");
+!           const char *p1, *p2;
+! 
+!           for (p1=path; p1; p1=p2) {
+!             p2 = strchr(p1, ':');
+!             if (p2) {
+!               memcpy(exe_path, p1, (p2-p1));
+!               exe_path[p2-p1] = 0;
+!               p2++;
+!             } else {
+!               strcpy(exe_path, p1);
+!             }
+! 
+!             strcat(exe_path, "/");
+!             strcat(exe_path, arg0);
+!             stat(exe_path, &sbuf);
+!             if (S_ISREG(sbuf.st_mode)) {
+!               break;
+!             }
+!           }
+!         }
+!       }
+! 
+!       // Now, back up two path elements
+!       i=strlen(exe_path)-1;
+! 
+!       for (num_elems=0; num_elems<2; num_elems++) {
+!         while (i>=0 && exe_path[i] != '/') {
+!           i--;
+!         }
+!         while (i>=0 && exe_path[i] == '/') {
+!           i--;
+!         }
+!       }
+! 
+!       exe_path[i+1] = 0;
+! 
+!       strcpy(ivl_root, exe_path);
+!       strcat(ivl_root, "/lib/ivl" IVL_SUFFIX);
+        base = ivl_root;
+  #endif
+  
