@@ -48,8 +48,11 @@ $(BUILD_DIR)/edapack-iverilog.d : $(PACKAGES_DIR)/$(IVERILOG_TGZ)
 	$(Q)cd $(BUILD_DIR)/iverilog/$(IVERILOG_DIR) ; \
 		./configure --prefix=$(BUILD_DIR)/iverilog/iverilog \
 			CXXFLAGS="-O3" CFLAGS="-O3"
+	$(Q)mkdir -p $(BUILD_DIR)/iverilog/iverilog/bin
 	$(Q)mkdir -p $(BUILD_DIR)/iverilog/iverilog/lib/ivl
 	$(Q)mkdir -p $(BUILD_DIR)/iverilog/iverilog/lib/ivl/include
+	$(Q)mkdir -p $(BUILD_DIR)/iverilog/iverilog/include/iverilog
+	$(Q)mkdir -p $(BUILD_DIR)/iverilog/iverilog/share/man/man1
 	$(Q)cd $(BUILD_DIR)/iverilog/$(IVERILOG_DIR) ; $(MAKE)
 	$(Q)cd $(BUILD_DIR)/iverilog/$(IVERILOG_DIR) ; $(MAKE) install
 	$(Q)touch $@

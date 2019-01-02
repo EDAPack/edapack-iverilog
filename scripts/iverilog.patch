@@ -1,6 +1,6 @@
 diff -rcNB verilog-10.2/driver/main.c verilog-10.2.float/driver/main.c
 *** verilog-10.2/driver/main.c	2017-08-24 08:22:49.000000000 -0700
---- verilog-10.2.float/driver/main.c	2018-12-31 11:39:37.300315386 -0800
+--- verilog-10.2.float/driver/main.c	2019-01-01 13:34:00.818482127 -0800
 ***************
 *** 20,25 ****
 --- 20,28 ----
@@ -94,3 +94,100 @@ diff -rcNB verilog-10.2/driver/main.c verilog-10.2.float/driver/main.c
         base = ivl_root;
   #endif
   
+diff -rcNB verilog-10.2/vvp/main.cc verilog-10.2.float/vvp/main.cc
+*** verilog-10.2/vvp/main.cc	2017-08-24 08:22:49.000000000 -0700
+--- verilog-10.2.float/vvp/main.cc	2019-01-01 13:35:35.901486212 -0800
+***************
+*** 31,36 ****
+--- 31,38 ----
+  # include  <cstdlib>
+  # include  <cstring>
+  # include  <unistd.h>
++ # include <sys/types.h>
++ # include <sys/stat.h>
+  #ifdef CHECK_WITH_VALGRIND
+  # include  <pthread.h>
+  #endif
+***************
+*** 296,303 ****
+        }
+        strcat(s, "\\lib\\ivl" IVL_SUFFIX);
+        vpip_module_path[0] = strdup(basepath);
+! #endif
+  
+  
+        if( ::getenv("VVP_WAIT_FOR_DEBUGGER") != 0 ) {
+            fprintf( stderr, "Waiting for debugger...\n");
+--- 298,369 ----
+        }
+        strcat(s, "\\lib\\ivl" IVL_SUFFIX);
+        vpip_module_path[0] = strdup(basepath);
+! #else
+!     /* Make the installation free-floating on Linux platforms too */
+!       char exe_path[4096], ivl_root[4096];
+!       const char *arg0 = argv[0];
+!       int num_elems, i;
+! 
+!       if (arg0[0] == '.') {
+!         // Get the full CWD and append the relative path
+!         getcwd(exe_path, sizeof(exe_path));
+!         if (arg0[1] == '.') {
+!           strcat(exe_path, "/");
+!           strcat(exe_path, arg0);
+!         } else {
+!           strcat(exe_path, &arg0[1]);
+!         }
+!       } else {
+!         // See if this full path exists
+!         struct stat sbuf;
+! 
+!         stat(arg0, &sbuf);
+!         if (S_ISREG(sbuf.st_mode)) {
+!           // arg0 is already an absolute path
+!           strcpy(exe_path, arg0);
+!         } else {
+!           // Look through the path
+!           const char *path = getenv("PATH");
+!           const char *p1, *p2;
+! 
+!           for (p1=path; p1; p1=p2) {
+!             p2 = strchr(p1, ':');
+!             if (p2) {
+!               memcpy(exe_path, p1, (p2-p1));
+!               exe_path[p2-p1] = 0;
+!               p2++;
+!             } else {
+!               strcpy(exe_path, p1);
+!             }
+! 
+!             strcat(exe_path, "/");
+!             strcat(exe_path, arg0);
+!             stat(exe_path, &sbuf);
+!             if (S_ISREG(sbuf.st_mode)) {
+!               break;
+!             }
+!           }
+!         }
+!       }
+! 
+!       // Now, back up two path elements
+!       i=strlen(exe_path)-1;
+  
++       for (num_elems=0; num_elems<2; num_elems++) {
++         while (i>=0 && exe_path[i] != '/') {
++           i--;
++         }
++         while (i>=0 && exe_path[i] == '/') {
++           i--;
++         }
++       }
++ 
++       exe_path[i+1] = 0;
++ 
++       strcpy(ivl_root, exe_path);
++       strcat(ivl_root, "/lib/ivl" IVL_SUFFIX);
++       vpip_module_path[0] = strdup(ivl_root);
++ #endif
+  
+        if( ::getenv("VVP_WAIT_FOR_DEBUGGER") != 0 ) {
+            fprintf( stderr, "Waiting for debugger...\n");
