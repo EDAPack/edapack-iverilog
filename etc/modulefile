@@ -10,16 +10,14 @@ proc ModulesHelp { } {
 
 # Modulefiles are located in ${EDAPACK}/modulefiles/<tool>/<version>
 # Compute
-puts "ModulesCurrentModulefile=$ModulesCurrentModulefile"
 
-set iverilog_modulefile_dir [file dirname $ModulesCurrentModulefile]
-set 
-set modulefiles_dir [file dirname $iverilog_modulefile_dir]
+set modulefile_dir [file dirname $ModulesCurrentModulefile]
+set modulefiles_dir [file dirname $modulefile_dir]
 set edapack_dir [file dirname $modulefiles_dir]
 
 set iverilog_bindir [file join $edapack_dir iverilog $version bin]
 
-append-path PATH $iverilog_bindir
+prepend-path PATH $iverilog_bindir
 
 
 # if [ module-info mode load ] {

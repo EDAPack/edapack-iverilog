@@ -41,9 +41,14 @@ all : $(PACKAGE)
 
 $(PACKAGE) : \
 		$(BUILD_DIR)/edapack-iverilog.d \
-		$(PREFIX)/etc/package.info \
-		$(PREFIX)/etc/install.py \
-		$(PREFIX)/etc/modulefile
+		$(PACKAGES_DIR)/install.py \
+		$(ETC_DIR)/modulefile \
+		$(ETC_DIR)/package.info
+	$(Q)mkdir -p $(PREFIX)/etc
+	$(Q)cp $(PACKAGES_DIR)/install.py $(PREFIX)/etc
+	$(Q)sed -e "s/{{version}}/$(version)/g" \
+		$(ETC_DIR)/modulefile  > $(PREFIX)/etc/modulefile
+	$(Q)cp $(ETC_DIR)/package.info $(PREFIX)/etc
 	$(Q)cd $(PREFIX) ; tar czf $@ *
 
 $(BUILD_DIR)/edapack-iverilog.d : $(PACKAGES_DIR)/$(IVERILOG_TGZ) 
@@ -67,18 +72,6 @@ $(BUILD_DIR)/edapack-iverilog.d : $(PACKAGES_DIR)/$(IVERILOG_TGZ)
 $(PACKAGES_DIR)/$(IVERILOG_TGZ) :
 	$(Q)if test ! -d $(PACKAGES_DIR); then mkdir -p $(PACKAGES_DIR); fi
 	$(Q)$(WGET) -O $@ $(IVERILOG_URL)
-	
-$(PREFIX)/etc/install.py : $(PACKAGES_DIR)/install.py
-	$(Q)mkdir -p $(PREFIX)/etc
-	$(Q)cp $^ $@
-	
-$(PREFIX)/etc/package.info : $(ETC_DIR)/package.info
-	$(Q)mkdir -p $(PREFIX)/etc
-	$(Q)cp $^ $@
-	
-$(PREFIX)/etc/modulefile : $(ETC_DIR)/modulefile
-	$(Q)mkdir -p $(PREFIX)/etc
-	$(Q)sed -e "s/{{version}}/$(version)/g" $^ > $@
 	
 $(PACKAGES_DIR)/install.py : 
 	$(Q)mkdir -p $(PACKAGES_DIR)
