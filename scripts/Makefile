@@ -35,7 +35,7 @@ IVERILOG_TGZ=$(IVERILOG_DIR).tar.gz
 IVERILOG_URL=ftp://icarus.com/pub/eda/verilog/v10/$(IVERILOG_TGZ)
 
 PREFIX=$(BUILD_DIR)/iverilog/iverilog
-PACKAGE=$(BUILD_DIR)/edapack-iverilog-$(platform)-$(version).tar.gz
+PACKAGE=$(BUILD_DIR)/iverilog-$(platform)-$(version).tar.gz
 
 all : $(PACKAGE)
 
