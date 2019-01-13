@@ -86,7 +86,7 @@ $(PACKAGES_DIR)/install.py :
 
 release : $(PACKAGE) $(PACKAGES_DIR)/upload.py
 	$(Q)$(PROJECT_DIR)/scripts/upload.py \
-		--org EDAPack --repo edapack-iverilog \
+		--org EDAPack --repo iverilog \
 		--key $(GITHUB_API_TOKEN) --version $(version) \
 		$(BUILD_DIR)/iverilog-$(platform)-$(version).tar.gz
 
